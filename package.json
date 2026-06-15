@@ -1,0 +1,25 @@
+{
+  "name": "gatx-stack-demo",
+  "private": true,
+  "packageManager": "pnpm@11.7.0",
+  "scripts": {
+    "start": "nx serve assembly-manager",
+    "build": "nx build assembly-manager",
+    "lint": "nx lint assembly-manager"
+  },
+  "devDependencies": {
+    "@nx/js": "^20.3.0",
+    "@nx/react": "^20.3.0",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "nx": "^20.3.0",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.7"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.62.8",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
