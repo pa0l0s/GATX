@@ -42,4 +42,15 @@ public sealed class AssemblyLine : Entity
         Active = active;
         MarkUpdated();
     }
+
+    public void MoveToProduct(Guid productId)
+    {
+        if (productId == Guid.Empty)
+        {
+            throw new ArgumentException("A product is required.", nameof(productId));
+        }
+
+        ProductId = productId;
+        MarkUpdated();
+    }
 }

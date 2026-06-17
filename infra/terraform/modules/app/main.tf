@@ -72,6 +72,12 @@ resource "aws_iam_role_policy_attachment" "ecr_readonly" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
+# SSM Session Manager — debug the instance without an SSH key pair
+resource "aws_iam_role_policy_attachment" "ssm" {
+  role       = aws_iam_role.ec2.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 resource "aws_iam_instance_profile" "ec2" {
   name = "${var.app_name}-ec2-profile"
   role = aws_iam_role.ec2.name
@@ -94,14 +100,17 @@ data "aws_ami" "al2023" {
 # ── EC2 t2.micro — runs both containers via docker compose ─────────────────────
 resource "aws_instance" "app" {
   ami                    = data.aws_ami.al2023.id
-  instance_type          = "t2.micro"  # free tier: 750 hrs/month for 12 months
+  instance_type          = "t3.micro"  # free-tier eligible (x86_64); t2.micro is no longer eligible on newer accounts
   iam_instance_profile   = aws_iam_instance_profile.ec2.name
   vpc_security_group_ids = [aws_security_group.ec2.id]
 
-  # 20 GB gp2 — free tier includes 30 GB
+  # Recreate the instance when user_data changes (user_data only runs on first boot)
+  user_data_replace_on_change = true
+
+  # 30 GB gp2 — free tier includes 30 GB; AL2023 AMI snapshot requires >= 30 GB
   root_block_device {
     volume_type = "gp2"
-    volume_size = 20
+    volume_size = 30
   }
 
   user_data = templatefile("${path.module}/userdata.sh.tpl", {
@@ -112,6 +121,7 @@ resource "aws_instance" "app" {
     db_host          = var.db_host
     db_password      = var.db_password
     db_username      = var.db_username
+    jwt_secret       = var.jwt_secret
   })
 
   tags = { Name = "${var.app_name}-ec2" }

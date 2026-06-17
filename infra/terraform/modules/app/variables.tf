@@ -19,3 +19,9 @@ variable "db_password" {
   type      = string
   sensitive = true
 }
+
+variable "jwt_secret" {
+  description = "Secret used to sign JWT access tokens."
+  type        = string
+  sensitive   = true
+}

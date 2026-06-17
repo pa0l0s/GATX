@@ -76,7 +76,7 @@ Write-Host "  (This takes ~3 minutes on first boot)" -ForegroundColor Gray
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  App URL : $APP_URL" -ForegroundColor Green
-Write-Host "  Health  : $APP_URL/health" (would be the API, proxied by nginx)
+Write-Host "  Health  : $APP_URL/health"   # API health, proxied by nginx
 Write-Host "  Swagger : $APP_URL/swagger"
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""

@@ -15,9 +15,17 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
         {
             await WriteProblemAsync(context, StatusCodes.Status400BadRequest, "Validation failed", exception.Errors.Select(error => error.ErrorMessage));
         }
+        catch (UnauthorizedAccessException exception)
+        {
+            await WriteProblemAsync(context, StatusCodes.Status401Unauthorized, exception.Message, []);
+        }
         catch (KeyNotFoundException exception)
         {
             await WriteProblemAsync(context, StatusCodes.Status404NotFound, exception.Message, []);
+        }
+        catch (ArgumentException exception)
+        {
+            await WriteProblemAsync(context, StatusCodes.Status400BadRequest, exception.Message, []);
         }
         catch (InvalidOperationException exception)
         {

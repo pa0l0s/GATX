@@ -2,11 +2,13 @@ using Gatx.Application.Products;
 using Gatx.Application.Products.Commands;
 using Gatx.Application.Products.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Gatx.WebApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public sealed class ProductsController(ISender sender) : ControllerBase
 {

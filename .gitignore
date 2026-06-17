@@ -17,3 +17,6 @@ terraform.tfstate.*
 .terraform/
 .terraform.lock.hcl
 terraform.tfvars
+
+# Playwright MCP session artifacts
+.playwright-mcp/

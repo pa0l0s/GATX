@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.80"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 }
 
@@ -20,6 +24,12 @@ provider "aws" {
   region = "us-east-1"
 }
 
+# ── JWT signing secret (generated, never committed) ───────────────────────────
+resource "random_password" "jwt_secret" {
+  length  = 48
+  special = false
+}
+
 # ── App module: EC2 + ECR ─────────────────────────────────────────────────────
 module "app" {
   source = "./modules/app"
@@ -29,6 +39,7 @@ module "app" {
   db_host     = module.database.host
   db_username = var.db_username
   db_password = var.db_password
+  jwt_secret  = random_password.jwt_secret.result
 }
 
 # ── Database module: RDS db.t3.micro (free tier) ──────────────────────────────

@@ -9,6 +9,7 @@ public interface IAppDbContext
     DbSet<AssemblyLine> AssemblyLines { get; }
     DbSet<Workstation> Workstations { get; }
     DbSet<AssemblyLineWorkstation> AssemblyLineWorkstations { get; }
+    DbSet<User> Users { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

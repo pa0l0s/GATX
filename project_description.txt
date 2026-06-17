@@ -1,0 +1,31 @@
+The goal of this challenge is to create a small assembly line manager web app deployed on aws
+Data Model 
+The app should allow users to input and manage business entities: 
+• Product (name) 
+• Assembly line (name, active) 
+• Workstation (short_name, name, pc_name) 
+Relationships 
+• One assembly line belongs to one product; a product can have multiple assembly lines. 
+• One assembly line can have multiple workstations allocated to it. 
+• One workstation can be allocated to multiple assembly lines. 
+
+Include secure authentication. You can either use a free external API (e.g., GitHub Login API) or implement 
+it on your own. 
+Use Cases 
+1. User login 
+2. Manage products 
+3. Manage assembly lines (CRUD, filter by product) 
+4. Manage workstations 
+5. Manage allocations: 
+a. Allocate workstations from the database to a chosen assembly line. Preserve the 
+allocation order and optionally allow re-ordering.  
+b. Support removal of allocations. 
+
+Your solution should be easy to set up and run (include a README). The backend should allow recreating 
+the database schema (seeding is optional). 
+Sample Data 
+You can use the examples below to test your solution: 
+• Products: 8DAB, 8DJH, Simosec, NXPlus C (Siemens switchgear models) 
+• Assembly lines: Convey line, Manual line, Final assembly line, Testing line 
+• Workstations: Laser welding, Manual welding, Drive assembly, Voltage drop test, Leakage test, 
+HV/PD test, Final inspection, Frame assembly, Testing, Dispatch 

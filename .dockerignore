@@ -1,0 +1,29 @@
+# Build artifacts that must never enter the image build context.
+# They contain host-specific (Windows) paths that break Linux container restores
+# and bloat the context.
+
+# .NET
+**/bin/
+**/obj/
+**/TestResults/
+
+# Node / frontend
+**/node_modules/
+**/dist/
+.pnpm-store/
+.nx/
+.angular/
+.vite/
+
+# VCS / IDE / infra state
+.git/
+.github/
+**/.terraform/
+**/terraform.tfstate*
+**/*.user
+**/*.suo
+
+# Local env / secrets
+**/.env
+**/.env.*
+!**/*.env.example

@@ -11,6 +11,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<AssemblyLine> AssemblyLines => Set<AssemblyLine>();
     public DbSet<Workstation> Workstations => Set<Workstation>();
     public DbSet<AssemblyLineWorkstation> AssemblyLineWorkstations => Set<AssemblyLineWorkstation>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
