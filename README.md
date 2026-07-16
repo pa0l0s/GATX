@@ -226,7 +226,7 @@ AWS infrastructure is managed by GitHub Actions + Terraform, split into `dev` an
 `production` environments with OIDC auth (no stored keys). See
 [`infra/CICD.md`](infra/CICD.md) for the one-time bootstrap and GitHub setup.
 
-- Open a PR touching `infra/**` → Terraform `plan` is posted as a PR comment.
+- Open a PR touching `infra/environments/**` or `infra/modules/**` → Terraform `plan` is posted as a PR comment.
 - Merge to `main` → `dev` applies automatically; `production` applies after approval.
 
 Push application images to an environment's ECR repos with:
