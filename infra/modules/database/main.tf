@@ -44,11 +44,11 @@ resource "aws_security_group" "postgres" {
 
 # ── RDS db.t3.micro — FREE TIER eligible (750 hrs/month for 12 months) ────────
 resource "aws_db_instance" "postgres" {
-  allocated_storage       = 20          # free tier: up to 20 GB
+  allocated_storage       = 20 # free tier: up to 20 GB
   db_name                 = replace(var.app_name, "-", "")
   engine                  = "postgres"
   engine_version          = "16"
-  instance_class          = "db.t3.micro"  # fixed: t4g.micro is NOT free tier
+  instance_class          = "db.t3.micro" # fixed: t4g.micro is NOT free tier
   username                = var.db_username
   password                = var.db_password
   publicly_accessible     = false

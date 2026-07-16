@@ -1,9 +1,0 @@
-# Copy this file to terraform.tfvars and fill in real values.
-# NEVER commit terraform.tfvars to git — it contains secrets.
-
-aws_region            = "eu-central-1"
-app_name              = "gatx-demo"
-db_username           = "gatx"
-db_password           = "CHANGE_ME_strong_password_here"
-billing_alert_email   = "your@email.com"
-billing_threshold_usd = 1

@@ -100,7 +100,7 @@ data "aws_ami" "al2023" {
 # ── EC2 t2.micro — runs both containers via docker compose ─────────────────────
 resource "aws_instance" "app" {
   ami                    = data.aws_ami.al2023.id
-  instance_type          = "t3.micro"  # free-tier eligible (x86_64); t2.micro is no longer eligible on newer accounts
+  instance_type          = "t3.micro" # free-tier eligible (x86_64); t2.micro is no longer eligible on newer accounts
   iam_instance_profile   = aws_iam_instance_profile.ec2.name
   vpc_security_group_ids = [aws_security_group.ec2.id]
 
@@ -114,14 +114,14 @@ resource "aws_instance" "app" {
   }
 
   user_data = templatefile("${path.module}/userdata.sh.tpl", {
-    region           = var.aws_region
-    ecr_registry     = split("/", aws_ecr_repository.api.repository_url)[0]
-    api_image        = aws_ecr_repository.api.repository_url
-    frontend_image   = aws_ecr_repository.frontend.repository_url
-    db_host          = var.db_host
-    db_password      = var.db_password
-    db_username      = var.db_username
-    jwt_secret       = var.jwt_secret
+    region         = var.aws_region
+    ecr_registry   = split("/", aws_ecr_repository.api.repository_url)[0]
+    api_image      = aws_ecr_repository.api.repository_url
+    frontend_image = aws_ecr_repository.frontend.repository_url
+    db_host        = var.db_host
+    db_password    = var.db_password
+    db_username    = var.db_username
+    jwt_secret     = var.jwt_secret
   })
 
   tags = { Name = "${var.app_name}-ec2" }

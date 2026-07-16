@@ -4,6 +4,14 @@
 #   Billing Preferences → enable "Receive Billing Alerts" BEFORE running terraform apply.
 #   (This one-time switch cannot be set via API/Terraform.)
 
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+  }
+}
+
 resource "aws_sns_topic" "billing" {
   # SNS topic must also be in us-east-1 to receive billing alarm notifications
   name = "${var.app_name}-billing-alerts"
@@ -22,7 +30,7 @@ resource "aws_cloudwatch_metric_alarm" "billing" {
   namespace           = "AWS/Billing"
   metric_name         = "EstimatedCharges"
   statistic           = "Maximum"
-  period              = 86400  # checked once per day
+  period              = 86400 # checked once per day
   threshold           = var.threshold_usd
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 1
