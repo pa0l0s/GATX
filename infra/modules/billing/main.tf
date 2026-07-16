@@ -22,7 +22,7 @@ resource "aws_cloudwatch_metric_alarm" "billing" {
   namespace           = "AWS/Billing"
   metric_name         = "EstimatedCharges"
   statistic           = "Maximum"
-  period              = 86400  # checked once per day
+  period              = 86400 # checked once per day
   threshold           = var.threshold_usd
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 1
