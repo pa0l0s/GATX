@@ -23,7 +23,7 @@ Docker and provisioned on AWS with Terraform.
 - [Default credentials](#default-credentials)
 - [API reference](#api-reference)
 - [Testing](#testing)
-- [Deploying to AWS](#deploying-to-aws)
+- [AWS Deployment (CI/CD)](#aws-deployment-cicd)
 - [Design notes & limitations](#design-notes--limitations)
 
 ---
@@ -220,37 +220,25 @@ Frontend type-check + production build:
 pnpm --filter assembly-manager build
 ```
 
-## Deploying to AWS
+## AWS Deployment (CI/CD)
 
-The Terraform in `infra/terraform` provisions a small, free-tier-oriented stack in one
-region: an **EC2** instance running both containers via Docker Compose, a **PostgreSQL
-RDS** instance, two **ECR** repositories, and a **CloudWatch billing alarm**. A generated
-JWT secret is passed to the API container.
+AWS infrastructure is managed by GitHub Actions + Terraform, split into `dev` and
+`production` environments with OIDC auth (no stored keys). See
+[`infra/CICD.md`](infra/CICD.md) for the one-time bootstrap and GitHub setup.
 
-> ⚠️ **Cost**: EC2 and RDS are free-tier *eligible* only on accounts within their first 12
-> months. Otherwise they incur charges. Always tear down when finished.
+- Open a PR touching `infra/**` → Terraform `plan` is posted as a PR comment.
+- Merge to `main` → `dev` applies automatically; `production` applies after approval.
 
-### One-shot deploy
-
-```powershell
-# 1. Copy and fill in the variables (never commit terraform.tfvars)
-cp infra/terraform/terraform.tfvars.example infra/terraform/terraform.tfvars
-
-# 2. Build images, provision infra, push to ECR, boot the app
-./infra/deploy.ps1
-```
-
-The script prints the public URL when done. The EC2 instance pulls the images and starts
-the app on first boot (~3 minutes).
-
-### Tear everything down
+Push application images to an environment's ECR repos with:
 
 ```powershell
-./infra/deploy.ps1 -DestroyAll
+.\infra\deploy.ps1 -Environment dev
 ```
 
-Prerequisites: AWS CLI configured, Terraform ≥ 1.8, Docker running. To receive the billing
-alarm, enable **Receive Billing Alerts** in the AWS console and confirm the SNS email.
+Cost note: `dev` and `production` each provision an EC2 instance and an RDS
+database. Destroy an environment when you are done learning by running
+`terraform destroy` in `infra/environments/<env>` (with the same
+`-backend-config="bucket=..."` used by the pipeline).
 
 ## Design notes & limitations
 

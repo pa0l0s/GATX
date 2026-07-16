@@ -1,83 +1,57 @@
 #!/usr/bin/env pwsh
-# deploy.ps1 — End-to-end GATX deployment to AWS (free tier)
+# deploy.ps1 — Build and push GATX app images to the ECR repos created by Terraform.
+#
+# Infrastructure is now managed by GitHub Actions (see infra/CICD.md), NOT this script.
+# This script only builds and pushes the Docker images for an already-provisioned
+# environment, then relies on the EC2 instance to pull them.
 #
 # Prerequisites:
-#   - AWS CLI installed and configured (aws configure)
-#   - Terraform >= 1.8 installed
+#   - AWS CLI configured with credentials that can read the env's Terraform state + ECR
 #   - Docker Desktop running
-#   - terraform.tfvars present in infra/terraform/ (copy from terraform.tfvars.example)
+#   - The target environment already applied by the pipeline
 #
-# Run from the repo root:  .\infra\deploy.ps1
+# Run from the repo root:  .\infra\deploy.ps1 -Environment dev
 
 param(
-  [string]$Region = "eu-central-1",
-  [string]$AppName = "gatx-demo",
-  [switch]$DestroyAll   # run with -DestroyAll to tear everything down
+  [ValidateSet("dev", "production")]
+  [string]$Environment = "dev",
+  [string]$Region = "eu-central-1"
 )
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path $PSScriptRoot -Parent
-$TerraformDir = Join-Path $PSScriptRoot "terraform"
+$EnvDir = Join-Path $PSScriptRoot "environments/$Environment"
 
 Write-Host ""
-Write-Host "=== GATX AWS Deployment ===" -ForegroundColor Cyan
-Write-Host ""
+Write-Host "=== GATX image push ($Environment) ===" -ForegroundColor Cyan
 
-# ── Step 1: Terraform init + apply ────────────────────────────────────────────
-Write-Host "Step 1/4: Provisioning AWS infrastructure with Terraform..." -ForegroundColor Yellow
-Push-Location $TerraformDir
+# ── Resolve state bucket from the caller's AWS account ────────────────────────
+$AccountId = (aws sts get-caller-identity --query Account --output text).Trim()
+$StateBucket = "gatx-tfstate-$AccountId"
 
-terraform init -upgrade
-if ($DestroyAll) {
-  terraform destroy -auto-approve
-  Write-Host "All resources destroyed." -ForegroundColor Green
-  Pop-Location
-  exit 0
-}
-terraform apply -auto-approve
-
-# Capture outputs
-$ECR_API      = (terraform output -raw ecr_api)
+# ── Read ECR repo URLs from Terraform outputs ────────────────────────────────
+Push-Location $EnvDir
+terraform init -input=false -backend-config="bucket=$StateBucket" | Out-Null
+$ECR_API = (terraform output -raw ecr_api)
 $ECR_FRONTEND = (terraform output -raw ecr_frontend)
-$APP_URL      = (terraform output -raw app_url)
-$AWS_ACCOUNT  = ($ECR_API -split "\.")[0]
-$ECR_REGISTRY = "$AWS_ACCOUNT.dkr.ecr.$Region.amazonaws.com"
-
+$APP_URL = (terraform output -raw app_url)
 Pop-Location
-Write-Host "  Infrastructure ready." -ForegroundColor Green
 
-# ── Step 2: ECR login ─────────────────────────────────────────────────────────
-Write-Host ""
-Write-Host "Step 2/4: Authenticating Docker to ECR..." -ForegroundColor Yellow
+$Registry = ($ECR_API -split "/")[0]
+
+# ── Authenticate Docker to ECR ───────────────────────────────────────────────
 aws ecr get-login-password --region $Region |
-  docker login --username AWS --password-stdin $ECR_REGISTRY
-Write-Host "  Docker logged in to ECR." -ForegroundColor Green
+  docker login --username AWS --password-stdin $Registry
 
-# ── Step 3: Build and push images ─────────────────────────────────────────────
-Write-Host ""
-Write-Host "Step 3/4: Building and pushing Docker images..." -ForegroundColor Yellow
+# ── Build and push both images ───────────────────────────────────────────────
 Push-Location $RepoRoot
-
-Write-Host "  Building API image..."
 docker build -f backend/src/Gatx.WebApi/Dockerfile -t "${ECR_API}:latest" .
 docker push "${ECR_API}:latest"
 
-Write-Host "  Building frontend image..."
 docker build -f frontend/apps/assembly-manager/Dockerfile -t "${ECR_FRONTEND}:latest" .
 docker push "${ECR_FRONTEND}:latest"
-
 Pop-Location
-Write-Host "  Images pushed to ECR." -ForegroundColor Green
 
-# ── Step 4: Done ──────────────────────────────────────────────────────────────
 Write-Host ""
-Write-Host "Step 4/4: EC2 instance is pulling images and starting the app..." -ForegroundColor Yellow
-Write-Host "  (This takes ~3 minutes on first boot)" -ForegroundColor Gray
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  App URL : $APP_URL" -ForegroundColor Green
-Write-Host "  Health  : $APP_URL/health"   # API health, proxied by nginx
-Write-Host "  Swagger : $APP_URL/swagger"
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "BILLING REMINDER: Run '.\infra\deploy.ps1 -DestroyAll' when done to avoid any charges." -ForegroundColor Magenta
+Write-Host "Images pushed. App URL: $APP_URL" -ForegroundColor Green
+Write-Host "(EC2 pulls new images on its hourly cycle or on next boot.)" -ForegroundColor Gray
