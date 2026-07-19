@@ -6,6 +6,19 @@ on:
     paths:
       - 'infra/environments/**'
       - 'infra/modules/**'
+  # Production is applied manually, not on every push. This AWS account is a
+  # free-plan account that allows only ONE RDS instance at a time; `dev` already
+  # holds that slot, so an automatic prod apply fails with InstanceQuotaExceeded.
+  # Free the dev slot (terraform destroy dev) before dispatching a prod apply.
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to apply
+        type: choice
+        options:
+          - dev
+          - production
+        default: dev
 
 permissions:
   id-token: write
@@ -18,6 +31,10 @@ concurrency:
 jobs:
   apply-dev:
     name: Apply Dev
+    # Runs on push to main, or on a manual dispatch that selects "dev".
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && inputs.environment == 'dev')
     runs-on: ubuntu-latest
     environment: dev
     defaults:
@@ -50,7 +67,9 @@ jobs:
 
   apply-production:
     name: Apply Production
-    needs: apply-dev
+    # Manual-only: never runs automatically (would exceed the free-plan RDS quota).
+    # No dependency on apply-dev — prod requires the dev slot to be freed first.
+    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'production'
     runs-on: ubuntu-latest
     environment: production
     defaults:

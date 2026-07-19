@@ -6,7 +6,15 @@ AWS infrastructure is provisioned by GitHub Actions with Terraform.
   `infra/environments/**` or `infra/modules/**` runs `plan` for both `dev` and
   `production` and comments the output on the PR.
 - **Apply on merge** (`.github/workflows/terraform-apply.yml`): merging to `main`
-  applies `dev` automatically, then `production` after a required-reviewer approval.
+  (touching `infra/**`) applies `dev` automatically. **`production` is applied
+  manually** via *Run workflow* (`workflow_dispatch`) with `environment: production`,
+  behind a required-reviewer approval — it is never applied on push.
+
+  > **Free-plan account limit:** this AWS account allows only one RDS instance at a
+  > time, which `dev` already uses. Running `production` automatically fails with
+  > `InstanceQuotaExceeded`, so it is manual-only. Free the dev slot first
+  > (`terraform destroy` in `infra/environments/dev`) before dispatching a prod apply,
+  > or use a paid account to run both at once.
 
 Auth is GitHub OIDC — no AWS keys are stored in GitHub.
 
